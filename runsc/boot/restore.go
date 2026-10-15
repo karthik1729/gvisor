@@ -66,6 +66,9 @@ const (
 	// ContainerSpecsKey is the key used to add and pop the container specs to the
 	// metadata during save/restore.
 	ContainerSpecsKey = "container_specs"
+	// CPUFeaturesKey is the key used to save the sandbox's CPU features in the
+	// save metadata.
+	CPUFeaturesKey = "cpu_features"
 
 	// TSC snapshot metadata keys. These are written by the save side in
 	// pkg/sentry/state and consumed by computeTSCOffset.
@@ -879,6 +882,9 @@ func (l *Loader) saveWithOpts(saveOpts *state.SaveOpts, execOpts *controlapi.Sav
 	if l.noRootContainer.enabled {
 		saveOpts.Metadata[noRootContainerKey] = "true"
 	}
+
+	// Save the sandbox's CPU features.
+	saveOpts.Metadata[CPUFeaturesKey] = strings.Join(l.k.FeatureSet().FeatureNames(), ",")
 
 	// Save container specs.
 	specsStr, err := specutils.ConvertSpecsToString(l.GetContainerSpecs())
