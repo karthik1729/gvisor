@@ -48,4 +48,8 @@ jobs:
     # _systrap target. The runner has no gtest filter, so the whole binary
     # runs and the NonCanonicalMin* lines are read from the log.
     - name: pty_test runsc systrap directfs
-      run: make syscall-tests OPTIONS=--test_output=all TARGETS=//test/syscalls:pty_test_runsc_systrap_directfs
+      run: |
+        # Ubuntu's AppArmor blocks the unprivileged user namespaces the
+        # non-root runsc test harness needs ("cannot create gofer process").
+        sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+        make syscall-tests OPTIONS=--test_output=all TARGETS=//test/syscalls:pty_test_runsc_systrap_directfs
