@@ -1,0 +1,43 @@
+name: pty-verify
+
+"on":
+  push:
+    branches:
+      - pty-syscall-test-ci
+
+jobs:
+  # with-fix: the new cases must pass on Linux and under runsc.
+  # without-fix: the same test with line_discipline.go reverted must fail
+  # under runsc, which proves the test detects the bug.
+  pty:
+    strategy:
+      fail-fast: false
+      matrix:
+        variant: [with-fix, without-fix]
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    permissions:
+      contents: read
+    steps:
+    - name: make
+      run: |
+        export DEBIAN_FRONTEND=noninteractive
+        sudo -E apt update && sudo -E apt install -y make
+
+    - name: Checkout
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      with:
+        fetch-depth: 5
+
+    - name: revert the fix
+      if: matrix.variant == 'without-fix'
+      run: |
+        git checkout 6c413ba840191ccf6dfae456b5e16a1023588fe1~1 -- pkg/sentry/fsimpl/devpts/line_discipline.go
+        git diff --stat HEAD
+
+    - name: pty_test native
+      if: matrix.variant == 'with-fix'
+      run: make syscall-tests TARGETS=//test/syscalls:pty_test_native
+
+    - name: pty_test runsc systrap
+      run: make syscall-tests TARGETS=//test/syscalls:pty_test_runsc_systrap
