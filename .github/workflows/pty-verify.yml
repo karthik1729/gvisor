@@ -35,9 +35,13 @@ jobs:
         git checkout 6c413ba840191ccf6dfae456b5e16a1023588fe1~1 -- pkg/sentry/fsimpl/devpts/line_discipline.go
         git diff --stat HEAD
 
+    # The runner's kernel fails an unrelated existing case
+    # (TCFLSHWakesReplicaPolloutAfterMasterInputFlush), so this step must not
+    # stop the runsc one; the NonCanonical lines are what is checked.
     - name: pty_test native
       if: matrix.variant == 'with-fix'
-      run: make syscall-tests TARGETS=//test/syscalls:pty_test_native
+      continue-on-error: true
+      run: make syscall-tests OPTIONS=--test_output=all TARGETS=//test/syscalls:pty_test_native
 
     - name: pty_test runsc systrap
-      run: make syscall-tests TARGETS=//test/syscalls:pty_test_runsc_systrap
+      run: make syscall-tests OPTIONS=--test_output=all TARGETS=//test/syscalls:pty_test_runsc_systrap
