@@ -43,5 +43,9 @@ jobs:
       continue-on-error: true
       run: make syscall-tests OPTIONS=--test_output=all TARGETS=//test/syscalls:pty_test_native
 
-    - name: pty_test runsc systrap
-      run: make syscall-tests OPTIONS=--test_output=all TARGETS=//test/syscalls:pty_test_runsc_systrap
+    # syscall_test() names the default platform's variant
+    # {test}_runsc_systrap_directfs (test/runner/defs.bzl); there is no plain
+    # _systrap target. The runner has no gtest filter, so the whole binary
+    # runs and the NonCanonicalMin* lines are read from the log.
+    - name: pty_test runsc systrap directfs
+      run: make syscall-tests OPTIONS=--test_output=all TARGETS=//test/syscalls:pty_test_runsc_systrap_directfs
